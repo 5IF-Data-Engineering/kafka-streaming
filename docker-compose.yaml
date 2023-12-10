@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:13.8-bullseye
+    hostname: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./tmp/postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      retries: 5
+ 
+  spark-master:
+    container_name: spark-master
+    extends:
+      file: spark-compose.yaml
+      service: spark-master
+
+  zookeeper:
+    container_name: zookeeper
+    extends:
+      file: kafka-compose.yaml
+      service: zookeeper
+  kafka:
+    container_name: kafka
+    extends:
+      file: kafka-compose.yaml
+      service: kafka
+
+networks:
+  default:
+    name: meteorif
