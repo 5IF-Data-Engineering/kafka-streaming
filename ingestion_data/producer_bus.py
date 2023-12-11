@@ -128,5 +128,8 @@ if __name__ == '__main__':
         future = producer.send('ingestion_bus_data', value=record)
         future.add_callback(on_send_success)
         future.add_errback(on_send_error)
+    # Flush producer
     producer.flush()
+    # Close producer
+    producer.close()
     logger.info("Data ingestion complete")

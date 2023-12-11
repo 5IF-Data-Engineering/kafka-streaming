@@ -71,3 +71,6 @@ query = df_json.writeStream \
 #     .start()
 
 query.awaitTermination()
+
+# Stop Spark Session
+spark.stop()

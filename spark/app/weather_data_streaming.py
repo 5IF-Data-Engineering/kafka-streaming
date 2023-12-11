@@ -83,3 +83,6 @@ query_window = output_data.writeStream \
 query_count.awaitTermination()
 
 query_window.awaitTermination()
+
+# Stop Spark Session
+spark.stop()
