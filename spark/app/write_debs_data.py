@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType
+from pyspark.sql.types import TimestampType, StructType, StructField, StringType, IntegerType, DoubleType
 import sys
 
 # Get the date from the command line
@@ -19,21 +19,18 @@ sc.setLogLevel("ERROR")
 schema = StructType([
     StructField("medallion", StringType(), True),
     StructField("hack_license", StringType(), True),
-    StructField("pickup_datetime", StringType(), True),
-    StructField("dropoff_datetime", StringType(), True),
+    StructField("vendor_id", StringType(), True),
+    StructField("rate_code", IntegerType(), True),
+    StructField("store_and_fwd_flag", StringType(), True),
+    StructField("pickup_datetime", TimestampType(), True),
+    StructField("dropoff_datetime", TimestampType(), True),
+    StructField("passenger_count", IntegerType(), True),
     StructField("trip_time_in_secs", IntegerType(), True),
     StructField("trip_distance", DoubleType(), True),
     StructField("pickup_longitude", DoubleType(), True),
     StructField("pickup_latitude", DoubleType(), True),
     StructField("dropoff_longitude", DoubleType(), True),
-    StructField("dropoff_latitude", DoubleType(), True),
-    StructField("payment_type", StringType(), True),
-    StructField("fare_amount", DoubleType(), True),
-    StructField("surcharge", DoubleType(), True),
-    StructField("mta_tax", DoubleType(), True),
-    StructField("tip_amount", DoubleType(), True),
-    StructField("tolls_amount", DoubleType(), True),
-    StructField("total_amount", DoubleType(), True)
+    StructField("dropoff_latitude", DoubleType(), True)
 ])
 
 # Read from CSV

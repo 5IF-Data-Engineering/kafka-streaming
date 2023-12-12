@@ -14,21 +14,18 @@ sc.setLogLevel("ERROR")
 schema = StructType([
     StructField("medallion", StringType(), True),
     StructField("hack_license", StringType(), True),
+    StructField("vendor_id", StringType(), True),
+    StructField("rate_code", IntegerType(), True),
+    StructField("store_and_fwd_flag", StringType(), True),
     StructField("pickup_datetime", TimestampType(), True),
     StructField("dropoff_datetime", TimestampType(), True),
+    StructField("passenger_count", IntegerType(), True),
     StructField("trip_time_in_secs", IntegerType(), True),
     StructField("trip_distance", DoubleType(), True),
     StructField("pickup_longitude", DoubleType(), True),
     StructField("pickup_latitude", DoubleType(), True),
     StructField("dropoff_longitude", DoubleType(), True),
-    StructField("dropoff_latitude", DoubleType(), True),
-    StructField("payment_type", StringType(), True),
-    StructField("fare_amount", DoubleType(), True),
-    StructField("surcharge", DoubleType(), True),
-    StructField("mta_tax", DoubleType(), True),
-    StructField("tip_amount", DoubleType(), True),
-    StructField("tolls_amount", DoubleType(), True),
-    StructField("total_amount", DoubleType(), True)
+    StructField("dropoff_latitude", DoubleType(), True)
 ])
 
 # Read from Kafka
@@ -50,7 +47,7 @@ df_json = df_string.select(from_json(col("value"), schema).alias("data")).select
 
 # Get the number of trips during the last 30 minutes
 windowed_data = df_json \
-    .withWatermark("pickup_datetime", "30 minutes") \
+    .withWatermark("pickup_datetime", "1 minute") \
     .groupBy(
         window(col("pickup_datetime"), "30 minutes")
     ) \
@@ -65,7 +62,8 @@ output_data = windowed_data.select(
 # Prepare Data for Writing
 query = output_data.writeStream \
     .format("console") \
-    .outputMode("append") \
+    .outputMode("complete") \
+    .option("truncate", "false") \
     .start()
 
 query.awaitTermination()
