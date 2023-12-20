@@ -32,28 +32,19 @@ df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "kafka:9092") \
     .option("subscribe", topic) \
+    .option("startingOffsets", "earliest") \
     .load()
 
 # Convert the value as string
 df_string = df.selectExpr("CAST(value AS STRING)")
 
 # Deserialize the JSON data
-df_json = df_string.select(from_json(col("value"), schema).alias("data")).select("data.*") \
-    .withColumn("timestamp", to_timestamp(col("timestamp"), "yyyy-MM-dd HH:mm:ss"))
-
-# Aggregate the data
-weather_count = df_json.groupBy(col("year"), col("month")).count()
-
-# Show the result
-query_count = weather_count.writeStream \
-    .format("console") \
-    .outputMode("complete") \
-    .start()
+df_json = df_string.select(from_json(col("value"), schema).alias("data")).select("data.*")
 
 windowed_data = df_json \
+    .withWatermark("timestamp", "1 minute") \
     .groupBy(
-        window(col("timestamp"), "3 seconds"),
-        col("year"), col("month")
+        window(col("timestamp"), "15 days"),
     ) \
     .count()
 
@@ -61,28 +52,32 @@ windowed_data = df_json \
 output_data = windowed_data.select(
     col("window.start").alias("window_start"),
     col("window.end").alias("window_end"),
-    col("year"),
-    col("month"),
     col("count")
 )
 
-# Write the result to PostgreSQL
-jdbc_url = "jdbc:postgresql://postgres:5432/streaming"
-jdbc_properties = {
-    "user": "postgres",
-    "password": "",
-    "driver": "org.postgresql.Driver"
-}
-
-query_window = output_data.writeStream \
-    .foreachBatch(lambda batch_df, batch_id: batch_df.write.jdbc(jdbc_url, "weather", 
-                                                                 mode="append", properties=jdbc_properties)) \
+output_data \
+    .writeStream \
+    .format("console") \
     .outputMode("update") \
-    .start()
+    .option("truncate", "false") \
+    .start() \
+    .awaitTermination()
 
-query_count.awaitTermination()
+# Write the result to PostgreSQL
+# jdbc_url = "jdbc:postgresql://postgres:5432/streaming"
+# jdbc_properties = {
+#     "user": "postgres",
+#     "password": "",
+#     "driver": "org.postgresql.Driver"
+# }
 
-query_window.awaitTermination()
+# query_window = output_data.writeStream \
+#     .foreachBatch(lambda batch_df, batch_id: batch_df.write.jdbc(jdbc_url, "weather", 
+#                                                                  mode="append", properties=jdbc_properties)) \
+#     .outputMode("update") \
+#     .start()
+
+# query_window.awaitTermination()
 
 # Stop Spark Session
 spark.stop()

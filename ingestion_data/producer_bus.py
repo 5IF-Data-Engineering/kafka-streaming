@@ -91,8 +91,15 @@ def transform_bus_data(data: pd.DataFrame):
     elif isinstance(data['time'][0], Timestamp):
         data['time'] = data['time'].apply(lambda x: x.strftime('%H:%M:%S'))
     data['hour'] = data['time'].apply(lambda x: int(x[:2]))
+    data['minute'] = data['time'].apply(lambda x: int(x[3:5]))
+    data['second'] = data['time'].apply(lambda x: int(x[6:8]))
+    # Add timestamp column
+    data['timestamp'] = data.apply(lambda x: pd.Timestamp(year=x['year'], month=x['month'], day=x['day'],
+                                                          hour=x['hour'], minute=x['minute'], second=x['second']),
+                                   axis=1)
+    data['timestamp'] = data['timestamp'].apply(lambda x: int(x.timestamp()))
     # Drop date and time columns
-    data.drop(columns=['date', 'time'], inplace=True)
+    data.drop(columns=['date', 'time', 'minute', 'second'], inplace=True)
     return data
 
 
@@ -119,12 +126,12 @@ if __name__ == '__main__':
     bus_df = load_bus_data(bus_df, args.year, args.month)
     print("Data types: ", bus_df.dtypes)
     # Convert to json
-    df_json = bus_df.to_json(orient='records', lines=True)
+    records = bus_df.to_dict(orient='records')
     # Create Kafka producer
     producer = KafkaProducer(bootstrap_servers=['localhost:29092'],
                              value_serializer=json_serializer)
     # Send data to Kafka
-    for record in df_json.split('\n'):
+    for record in records:
         future = producer.send('ingestion_bus_data', value=record)
         future.add_callback(on_send_success)
         future.add_errback(on_send_error)

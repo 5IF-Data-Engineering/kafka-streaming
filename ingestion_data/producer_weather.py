@@ -66,6 +66,9 @@ def transform_weather_data(data):
     df['day'] = df['time'].apply(lambda x: int(x[8:10]))
     df['day_of_week'] = df['time'].apply(lambda x: datetime.datetime.strptime(x[:10], '%Y-%m-%d').strftime('%A'))
     df['hour'] = df['time'].apply(lambda x: int(x[11:13]))
+    # Add timestamp column
+    df['timestamp'] = df['time'].apply(lambda x: datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M'))
+    df['timestamp'] = df['timestamp'].apply(lambda x: int(x.timestamp()))
     df.drop(columns=['time'], inplace=True)
     return df.to_dict(orient='records')
 
@@ -82,7 +85,6 @@ if __name__ == "__main__":
                              value_serializer=json_serializer)
     # Send data
     for record in records:
-        record['timestamp'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         producer.send('ingestion_weather_data', record).add_callback(on_send_success).add_errback(on_send_error)
     producer.flush()
     logger.info("Weather data ingestion complete")
