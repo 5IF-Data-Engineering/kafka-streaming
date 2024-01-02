@@ -15,6 +15,16 @@ services:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
       retries: 5
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./tmp/grafana:/var/lib/grafana
  
   spark-master:
     container_name: spark-master
@@ -33,28 +43,28 @@ services:
       file: kafka-compose.yaml
       service: kafka
 
-  namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
-    container_name: namenode
-    ports:
-      - "9870:9870"
-    volumes:
-      - ./tmp/hadoop-namenode:/hadoop/dfs/name
-      - ./hadoop/data:/hadoop-data
-    hostname: namenode
-    environment:
-      CLUSTER_NAME: hadoop
-
-  datanode:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode
-    environment:
-      CLUSTER_NAME: hadoop
-      CORE_CONF_fs_defaultFS: hdfs://namenode:8020
-    volumes:
-      - ./tmp/hadoop-datanode:/hadoop/dfs/data
-    depends_on:
-      - namenode
+#  namenode:
+#    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+#    container_name: namenode
+#    ports:
+#      - "9870:9870"
+#    volumes:
+#      - ./tmp/hadoop-namenode:/hadoop/dfs/name
+#      - ./hadoop/data:/hadoop-data
+#    hostname: namenode
+#    environment:
+#      CLUSTER_NAME: hadoop
+#
+#  datanode:
+#    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+#    container_name: datanode
+#    environment:
+#      CLUSTER_NAME: hadoop
+#      CORE_CONF_fs_defaultFS: hdfs://namenode:8020
+#    volumes:
+#      - ./tmp/hadoop-datanode:/hadoop/dfs/data
+#    depends_on:
+#      - namenode
 
 networks:
   default:
