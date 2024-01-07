@@ -67,7 +67,7 @@ Finally, you can visualize the data in the [Grafana](https://grafana.com/) dashb
 
 If you want to make sure that the data is sent to the `ingestion_data` topic, you can run the following command:
 ```bash
-docker exec -it kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic ingestion_weather_data --from-beginning
+docker exec -it kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic ingestion_data --from-beginning
 ```
 
 # Contact
