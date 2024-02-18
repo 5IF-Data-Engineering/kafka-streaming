@@ -24,7 +24,7 @@ First, you need the Parquet file that contains Fact table data and put it in the
 
 Then, you need to run the following commands:
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 This will start the [Kafka](https://kafka.apache.org/), [Grafana](https://grafana.com/) and [PostgreSQL](https://www.postgresql.org/) containers.
 
